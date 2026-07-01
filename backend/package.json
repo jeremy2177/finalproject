@@ -1,7 +1,14 @@
 {
+  "name": "acacia-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node --test tests/api.test.js",
+    "start": "node server.js"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
+    "dayjs": "^1.11.13",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
