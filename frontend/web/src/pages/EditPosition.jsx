@@ -1,18 +1,40 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
 
-function AddPosition() {
+function EditPosition() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     ticker: '',
+    status: 'active',
     shares_owned: '',
     avg_cost_basis: '',
-    opened_at: new Date().toISOString().split('T')[0],
     notes: ''
   });
   const [errors, setErrors] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    async function loadPosition() {
+      try {
+        const res = await api.getPositionDetail(id);
+        setFormData({
+          ticker: res.position.ticker,
+          status: res.position.status,
+          shares_owned: res.position.shares_owned,
+          avg_cost_basis: res.position.avg_cost_basis,
+          notes: res.position.notes || ''
+        });
+      } catch (err) {
+        setErrors([err.message || 'Failed to load position data']);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadPosition();
+  }, [id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -28,25 +50,32 @@ function AddPosition() {
 
     const shares = parseInt(formData.shares_owned);
     if (isNaN(shares) || shares < 100 || shares % 100 !== 0) {
-      setErrors(['Shares owned must be a multiple of 100 (representing standard contracts).']);
+      setErrors(['Shares owned must be a multiple of 100.']);
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
     try {
-      const res = await api.createPosition({
+      await api.updatePosition(id, {
         ...formData,
         shares_owned: shares,
         avg_cost_basis: parseFloat(formData.avg_cost_basis)
       });
-      // Redirect to sell trade add page
-      navigate(`/positions/${res.id}/trades/add`);
+      navigate(`/positions/${id}`);
     } catch (err) {
-      setErrors([err.message || 'An error occurred while creating position.']);
+      setErrors([err.message || 'Failed to save changes.']);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
 
   return (
     <main className="main-content">
@@ -55,19 +84,20 @@ function AddPosition() {
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'flex', gap: 'var(--space-2)' }}>
           <Link to="/positions" style={{ textDecoration: 'underline' }}>Positions</Link>
           <span>&gt;</span>
-          <span>Add Position</span>
+          <Link to={`/positions/${id}`} style={{ textDecoration: 'underline' }}>{formData.ticker}</Link>
+          <span>&gt;</span>
+          <span>Edit</span>
         </div>
-        <h1 className="m-t-2">Log New Underlying Position</h1>
-        <p className="page-subtitle">Record your stock or ETF purchase details. Options contracts are mapped to these share holdings.</p>
+        <h1 className="m-t-2">Edit Underlying Position Details</h1>
+        <p className="page-subtitle">Modify parameters or update status fields for this underlying asset holding.</p>
       </div>
 
-      {/* Form container */}
       <div className="card" style={{ maxWidth: '600px', margin: '0 auto', width: '100%' }}>
         <div className="card-header">
-          <h3 className="card-title">Stock / ETF Details</h3>
+          <h3 className="card-title">Modify Holding Parameters</h3>
         </div>
 
-        {/* Error messages banner */}
+        {/* Error Banner */}
         {errors.length > 0 && (
           <div className="error-banner">
             <strong>Error:</strong>
@@ -89,15 +119,31 @@ function AddPosition() {
                 id="ticker" 
                 name="ticker" 
                 className="form-control" 
-                placeholder="e.g. AAPL" 
                 required 
                 value={formData.ticker}
                 onChange={handleInputChange}
                 style={{ textTransform: 'uppercase' }}
               />
-              <span className="form-helper">Capital letters only (e.g. MSFT, SPY)</span>
             </div>
 
+            {/* Status */}
+            <div className="form-group">
+              <label htmlFor="status" className="form-label">Position Status</label>
+              <select 
+                id="status" 
+                name="status" 
+                className="form-control"
+                value={formData.status}
+                onChange={handleInputChange}
+              >
+                <option value="active">Active</option>
+                <option value="closed">Closed (Sold shares manually)</option>
+                <option value="assigned">Assigned (Option exercised)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-row">
             {/* Shares Owned */}
             <div className="form-group">
               <label htmlFor="shares_owned" className="form-label">Shares Owned</label>
@@ -106,18 +152,14 @@ function AddPosition() {
                 id="shares_owned" 
                 name="shares_owned" 
                 className="form-control" 
-                placeholder="100, 200, etc." 
                 required 
                 min="100" 
                 step="100" 
                 value={formData.shares_owned}
                 onChange={handleInputChange}
               />
-              <span className="form-helper text-warning">Must be a multiple of 100 (1 standard contract)</span>
             </div>
-          </div>
 
-          <div className="form-row">
             {/* Average Cost Basis */}
             <div className="form-group">
               <label htmlFor="avg_cost_basis" className="form-label">Average Cost Basis ($)</label>
@@ -126,55 +168,33 @@ function AddPosition() {
                 id="avg_cost_basis" 
                 name="avg_cost_basis" 
                 className="form-control" 
-                placeholder="e.g. 145.50" 
                 required 
                 min="0.01" 
                 step="0.01" 
                 value={formData.avg_cost_basis}
                 onChange={handleInputChange}
               />
-              <span className="form-helper">Your average purchase price per share</span>
-            </div>
-
-            {/* Opened Date */}
-            <div className="form-group">
-              <label htmlFor="opened_at" className="form-label">Purchase Date</label>
-              <input 
-                type="date" 
-                id="opened_at" 
-                name="opened_at" 
-                className="form-control" 
-                required 
-                value={formData.opened_at}
-                onChange={handleInputChange}
-              />
-              <span className="form-helper">When you bought the underlying shares</span>
             </div>
           </div>
 
           {/* Notes */}
           <div className="form-group">
-            <label htmlFor="notes" className="form-label">Notes (Optional)</label>
+            <label htmlFor="notes" className="form-label">Position Notes</label>
             <textarea 
               id="notes" 
               name="notes" 
               className="form-control" 
-              rows="3" 
-              placeholder="Enter notes or comments regarding this holding..."
+              rows="3"
               value={formData.notes}
               onChange={handleInputChange}
             ></textarea>
           </div>
 
-          {/* Form Actions */}
+          {/* Action Buttons */}
           <div className="form-actions flex justify-end gap-3 m-t-4">
-            <Link to="/positions" className="btn btn--secondary">Cancel</Link>
-            <button type="submit" className="btn btn--primary" disabled={loading}>
-              <span>{loading ? 'Logging...' : 'Log & Proceed'}</span>
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
+            <Link to={`/positions/${id}`} className="btn btn--secondary">Cancel</Link>
+            <button type="submit" className="btn btn--primary" disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>
@@ -183,4 +203,4 @@ function AddPosition() {
   );
 }
 
-export default AddPosition;
+export default EditPosition;
