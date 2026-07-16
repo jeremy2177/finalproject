@@ -1,40 +1,50 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import '@/global.css';
 
 import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#e8eaf0',
+    textSecondary: '#8892aa',
+    background: '#0f1117',
+    backgroundElement: '#1a1d27',
+    backgroundSelected: '#22263a',
+    border: '#2e3347',
+    accent: '#4f8ef7',
+    success: '#22c55e',
+    danger: '#ef4444',
+    warning: '#f59e0b',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#e8eaf0',
+    textSecondary: '#8892aa',
+    background: '#0f1117',
+    backgroundElement: '#1a1d27',
+    backgroundSelected: '#22263a',
+    border: '#2e3347',
+    accent: '#4f8ef7',
+    success: '#22c55e',
+    danger: '#ef4444',
+    warning: '#f59e0b',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+export const ChartColors = {
+  accent: '#4f8ef7',
+  success: '#22c55e',
+  danger: '#ef4444',
+  warning: '#f59e0b',
+  border: '#2e3347',
+  text: '#8892aa',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
@@ -63,3 +73,11 @@ export const Spacing = {
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
+
+export function formatCurrency(value: number): string {
+  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+}
+
+export function formatPercent(value: number, decimals = 2): string {
+  return `${value.toFixed(decimals)}%`;
+}
