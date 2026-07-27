@@ -11,27 +11,32 @@ function getBaseUrl(): string {
   if (hostUri) {
     const match = hostUri.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/);
     if (match) {
-      return `http://${match[0]}:3001/api`;
+      return `http://${match[0]}:3001`;
     }
   }
 
   if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:3001/api';
+    return 'http://10.0.2.2:3001';
   }
 
-  return 'http://localhost:3001/api';
+  return 'http://localhost:3001';
 }
 
 const BASE_URL = getBaseUrl();
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    let errorMsg = 'An error occurred';
+    let errorMsg = `HTTP Error ${response.status}`;
     try {
       const errData = await response.json();
       errorMsg = errData.error || errData.message || errorMsg;
     } catch {
-      // Ignore if not JSON
+      try {
+        const text = await response.text();
+        if (text) errorMsg = text;
+      } catch {
+        // Fallback
+      }
     }
     throw new Error(errorMsg);
   }
