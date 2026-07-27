@@ -56,6 +56,15 @@ export interface PositionFilters {
 }
 
 export const api = {
+  register: async (username: string, password: string, email?: string) => {
+    const response = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, email }),
+    });
+    return handleResponse(response);
+  },
+
   login: async (username: string, password: string) => {
     const response = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',

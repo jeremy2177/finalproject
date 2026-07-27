@@ -49,6 +49,41 @@ app.get('/health', async (_req, res) => {
 });
 
 // ─── Auth ─────────────────────────────────────────────────
+app.post('/auth/register', async (req, res) => {
+  try {
+    const { username, password, email } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    if (username.length < 3) {
+      return res.status(400).json({ error: 'Username must be at least 3 characters' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    await initDB();
+    const [existing] = await pool.execute('SELECT id FROM users WHERE username = ?', [username]);
+    if (existing.length > 0) {
+      return res.status(400).json({ error: 'Username is already taken' });
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+    const [result] = await pool.execute(
+      'INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)',
+      [username, password_hash, email || null]
+    );
+
+    res.status(201).json({
+      user: { id: result.insertId, username, email: email || null }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
