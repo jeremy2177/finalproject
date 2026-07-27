@@ -1,9 +1,24 @@
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 function getBaseUrl(): string {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
+  // Extract host IP dynamically from Expo packager connection
+  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoGo?.debuggerHost;
+  if (hostUri) {
+    const match = hostUri.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/);
+    if (match) {
+      return `http://${match[0]}:3001/api`;
+    }
+  }
+
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:3001/api';
   }
+
   return 'http://localhost:3001/api';
 }
 

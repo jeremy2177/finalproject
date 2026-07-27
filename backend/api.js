@@ -770,7 +770,7 @@ app.get('/export/positions', async (_req, res) => {
 
 // ─── Server ───────────────────────────────────────────────
 async function startServer(options = {}) {
-  const server = app.listen(options.port || PORT, '127.0.0.1', async () => {
+  const server = app.listen(options.port || PORT, '0.0.0.0', async () => {
     try {
       await initDB();
     } catch (error) {
@@ -784,7 +784,7 @@ async function startServer(options = {}) {
 
 if (require.main === module) {
   startServer().then((server) => {
-    console.log(`Backend API running on http://127.0.0.1:${server.address().port}`);
+    console.log(`Backend API running on http://0.0.0.0:${server.address().port}`);
   });
 }
 
