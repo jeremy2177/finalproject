@@ -30,8 +30,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (savedUser) {
           setUser(JSON.parse(savedUser));
         }
-      } catch {
-        await AsyncStorage.removeItem(STORAGE_KEY);
+      } catch (e) {
+        console.warn('Failed to load user from AsyncStorage:', e);
+        try {
+          await AsyncStorage.removeItem(STORAGE_KEY);
+        } catch {
+          // ignore secondary storage failure
+        }
       } finally {
         setLoading(false);
       }

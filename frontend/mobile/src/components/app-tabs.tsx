@@ -29,7 +29,7 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="statistics">
         <NativeTabs.Trigger.Label>Statistics</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home@2x.png')}
+          src={require('@/assets/images/tabIcons/home.png')}
           renderingMode="template"
         />
       </NativeTabs.Trigger>
