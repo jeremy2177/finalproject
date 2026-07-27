@@ -1,7 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 import { api } from '@/services/api';
+import { SafeStorage } from '@/utils/storage';
 
 const STORAGE_KEY = 'acacia_user';
 
@@ -26,17 +26,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function loadUser() {
       try {
-        const savedUser = await AsyncStorage.getItem(STORAGE_KEY);
+        const savedUser = await SafeStorage.getItem(STORAGE_KEY);
         if (savedUser) {
           setUser(JSON.parse(savedUser));
         }
-      } catch (e) {
-        console.warn('Failed to load user from AsyncStorage:', e);
-        try {
-          await AsyncStorage.removeItem(STORAGE_KEY);
-        } catch {
-          // ignore secondary storage failure
-        }
+      } catch {
+        await SafeStorage.removeItem(STORAGE_KEY);
       } finally {
         setLoading(false);
       }
@@ -48,14 +43,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = (await api.login(username, password)) as { user?: User };
     if (data.user) {
       setUser(data.user);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
+      await SafeStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
     }
     return data;
   }, []);
 
   const logout = useCallback(async () => {
     setUser(null);
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    await SafeStorage.removeItem(STORAGE_KEY);
   }, []);
 
   return (
