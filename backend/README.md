@@ -29,49 +29,54 @@ To run this backend on a different machine, make sure the following are in place
 
 ### Required environment variables
 
-The backend expects the MySQL connection details to be available in the environment. Set the values for your own machine before starting the server:
+The backend expects the MySQL connection details to be available in the environment via a `.env` file. You can easily set this up using the provided example file.
+
+First, copy `.env.example` to create your own `.env` file:
 
 ```bash
+cp .env.example .env
+```
+
+Then, open the `.env` file and set the values to match your MySQL configuration:
+
+```bash
+PORT=3001
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=your_mysql_password
 DB_NAME=covered_calls
+# MYSQL_SOCKET=
 ```
 
-Example:
+Once your `.env` file is configured, the variables will be automatically loaded when you start the server:
 
 ```bash
-export DB_HOST=127.0.0.1
-export DB_PORT=3306
-export DB_USER=root
-export DB_PASSWORD=your_mysql_password
-export DB_NAME=covered_calls
 node api.js
 ```
 
 ### MySQL setup
 
-If MySQL is fresh on the machine, create the database and import the schema:
+If you are setting this up on your own MySQL server, you will need to create the database and import the schema.
 
+1. Connect to your MySQL server:
 ```bash
 mysql -u root -p
 ```
+*(If your MySQL user is not `root`, replace `root` with your username).*
 
-Then run:
-
+2. Create the database:
 ```sql
 CREATE DATABASE IF NOT EXISTS covered_calls;
-USE covered_calls;
+EXIT;
 ```
 
-Import the schema file from this project:
-
+3. Import the schema file provided in the `backend` folder:
 ```bash
-mysql -u root -p covered_calls < /path/to/this/project/backend/schema.sql
+mysql -u root -p covered_calls < schema.sql
 ```
 
-If the database already contains data, you can skip the import step and just start the server.
+If the database already contains data or you have already set it up, you can skip this step and just start the server.
 
 ### Frontend base URL
 
